@@ -20,7 +20,20 @@ func NewRouter(db *sql.DB) *Router {
 }
 
 func (r *Router) SetupRoutes() {
-	http.HandleFunc("/tb01", r.tb01Controller.Create)
+	http.HandleFunc("/tb01", r.enableCors(r.tb01Controller.Create))
+}
+
+func (r *Router) enableCors(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if req.Method == "OPTIONS" {
+			return
+		}
+		next(w, req)
+	}
 }
 
 func StartServer(port string) {
@@ -33,5 +46,5 @@ func StartServer(port string) {
 	router.SetupRoutes()
 
 	log.Printf("Server listening on port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe("localhost:"+port, nil))
 }
